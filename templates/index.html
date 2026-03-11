@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Cerandolia - Decision Ledger</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #eadded; color: #333; margin: 0; padding: 20px; }
+        
+        /* O Flexbox que divide a tela em duas colunas! */
+        .layout-principal { display: flex; gap: 30px; max-width: 1100px; margin: auto; }
+        .coluna-principal { flex: 7; } /* Ocupa 70% do espaço */
+        .coluna-lateral { flex: 3; }   /* Ocupa 30% do espaço */
+
+        h1, h2 { color: #3b1154; text-transform: uppercase; letter-spacing: 2px;}
+        
+        .card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 15px; border-left: 8px solid #845ec2; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .tag { background: #d5c0e8; color: #3b1154; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        p { margin: 8px 0; }
+
+        /* Estilo exclusivo para as caixinhas de métricas */
+        .metric-box { background: white; border-radius: 15px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .metric-title { font-size: 14px; color: gray; margin: 0; font-weight: bold; text-transform: uppercase; }
+        .metric-value { font-size: 38px; color: #3b1154; font-weight: bold; margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <div class="layout-principal">
+        
+        <div class="coluna-principal">
+            <h1>Decision Ledger</h1>
+
+            <form method="GET" action="/" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <input type="text" name="busca" placeholder="✨ AI Search: Buscar decisões, palavras-chave ou responsáveis..." style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #845ec2; font-size: 15px;">
+                <button type="submit" style="background-color: #3b1154; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;">Pesquisar</button>
+                <a href="/" style="background-color: #eadded; color: #3b1154; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; display: flex; align-items: center; border: 1px solid #3b1154;">Limpar</a>
+            </form>
+            
+            <div class="card" style="background-color: #f4eef9; border-left: none;">
+                <h3 style="margin-top: 0;">➕ Nova Decisão</h3>
+                <form method="POST">
+                    <input type="text" name="titulo" placeholder="Título da Decisão" required style="width: 95%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ccc;">
+                    <textarea name="decisao_tomada" placeholder="O que foi decidido?" required style="width: 95%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ccc; font-family: inherit;"></textarea>
+                    <input type="text" name="responsavel" placeholder="Nome do Responsável" required style="width: 95%; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ccc;">
+                    <button type="submit" style="background-color: #845ec2; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">Salvar Decisão</button>
+                </form>
+            </div>
+
+            {% for d in decisoes %}
+            <div class="card" style="position: relative;">
+                <form method="POST" action="/deletar/{{ d[0] }}" style="position: absolute; top: 20px; right: 20px; margin: 0;">
+                    <button type="submit" style="background: none; border: none; cursor: pointer; color: #ff6b6b; font-size: 16px;" title="Apagar Decisão" onclick="return confirm('Tem certeza que deseja apagar esta decisão permanentemente?');">🗑️</button>
+                </form>
+                <h3>{{ d[1] }} <span class="tag">v{{ d[6] }}</span></h3>
+                <p><strong>Decisão:</strong> {{ d[2] }}</p>
+                <p><strong>Responsável:</strong> {{ d[4] }}</p>
+                <p style="font-size: 13px; color: gray; margin-top: 15px;">Última atualização: {{ d[5] }}</p>
+                
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+                <form method="POST" action="/atualizar/{{ d[0] }}" style="display: flex; gap: 10px;">
+                    <input type="text" name="nova_decisao" placeholder="A estratégia mudou? Digite a nova decisão..." required style="flex: 1; padding: 8px; border-radius: 5px; border: 1px solid #ccc;">
+                    <button type="submit" style="background-color: #d5c0e8; color: #3b1154; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">Subir para v{{ d[6] + 1 }}</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="coluna-lateral">
+            <h2 style="margin-top: 20px;">Métricas</h2>
+            
+            <div class="metric-box">
+                <p class="metric-title">Total de Decisões</p>
+                <p class="metric-value">{{ total_decisoes }}</p>
+            </div>
+
+            {% if ultima_decisao %}
+            <div class="metric-box">
+                <p class="metric-title">Última Decisão Tomada</p>
+                <p style="font-weight: bold; margin: 10px 0 5px 0;">{{ ultima_decisao[1] }}</p>
+                <p style="font-size: 12px; color: gray; margin: 0;">{{ ultima_decisao[5] }}</p>
+            </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+</body>
+</html>
