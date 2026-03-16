@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Knowledge Hub - Cerandolia</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #eadded; margin: 0; display: flex; min-height: 100vh; }
+        
+        /* Sidebar */
+        .sidebar { width: 80px; background-color: #3b1154; display: flex; flex-direction: column; align-items: center; padding-top: 20px; position: sticky; top: 0; height: 100vh; }
+        .sidebar a { color: white; text-decoration: none; margin-bottom: 30px; font-size: 24px; opacity: 0.6; transition: 0.3s; }
+        .sidebar a:hover { opacity: 1; transform: scale(1.2); }
+
+        .content { flex: 1; padding: 40px; }
+        h1 { color: #3b1154; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 30px;}
+        
+        /* Card do Formulário */
+        .card-form { background: white; padding: 20px; border-radius: 15px; margin-bottom: 30px; max-width: 500px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .card-form input { padding: 10px; border-radius: 5px; border: 1px solid #ccc; width: 60%; }
+        .card-form button { background: #3b1154; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+
+        /* Grid das Pastas */
+        .folder-grid { display: flex; flex-wrap: wrap; gap: 40px; }
+        .folder-item { text-align: center; cursor: pointer; width: 120px; transition: transform 0.2s; }
+        .folder-item:hover { transform: scale(1.1); }
+        .folder-icon { width: 100px; height: 80px; background-color: #3b1154; border-radius: 10px 30px 10px 10px; position: relative; margin: auto; margin-bottom: 10px; }
+        .folder-icon::before { content: ""; width: 40px; height: 15px; background-color: #3b1154; position: absolute; top: -10px; left: 0; border-radius: 5px 5px 0 0; }
+        .folder-name { color: #3b1154; font-weight: bold; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <a href="/" title="Decision Ledger">📋</a>
+        <a href="/knowledge-hub" title="Knowledge Hub" style="opacity: 1;">📂</a>
+    </div>
+
+    <div class="content">
+        <h1>Pastas & Arquivos</h1>
+
+        <form method="GET" action="/knowledge-hub" style="display: flex; gap: 10px; margin-bottom: 25px; max-width: 600px;">
+            <input type="text" name="busca_pasta" placeholder="🔍 Qual pasta você está procurando?" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #845ec2; font-size: 15px;">
+            <button type="submit" style="background-color: #3b1154; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;">Buscar</button>
+            <a href="/knowledge-hub" style="background-color: #eadded; color: #3b1154; text-decoration: none; padding: 10px 20px; border-radius: 8px; border: 1px solid #3b1154; display: flex; align-items: center; font-weight: bold;">Limpar</a>
+        </form>
+
+        <div class="card-form">
+            <h3 style="margin-top: 0; color: #3b1154;">📁 Criar Nova Pasta</h3>
+            <form method="POST">
+                <input type="text" name="nome_pasta" placeholder="Nome da pasta..." required>
+                <button type="submit">Criar</button>
+            </form>
+        </div>
+
+<div class="folder-grid">
+    {% for p in pastas %}
+    <div style="display: flex; align-items: center; gap: 8px;">
+        
+        <a href="/pasta/{{ p[0] }}" style="text-decoration: none;">
+            <div class="folder-item">
+                <div class="folder-icon"></div>
+                <div class="folder-name">{{ p[1] }}</div>
+            </div>
+        </a>
+
+        <form method="POST" action="/deletar-pasta/{{ p[0] }}" style="margin: 0; margin-bottom: 25px;">
+            <button type="submit" style="background: none; border: none; cursor: pointer; font-size: 20px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" onclick="return confirm('Tem certeza? Isso apagará a pasta e todos os arquivos dentro dela!');" title="Excluir Pasta">🗑️</button>
+        </form>
+
+    </div>
+    {% endfor %}
+</div>
+
+        </div>
+    </div>
+
+</body>
+</html>

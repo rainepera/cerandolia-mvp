@@ -86,6 +86,86 @@ def deletar(id):
     conexao.close()
     return redirect(url_for('home'))
 
+@app.route('/knowledge-hub', methods=['GET', 'POST'])
+def knowledge_hub():
+    conexao = sqlite3.connect('cerandolia.db')
+    cursor = conexao.cursor()
+
+    # Se estiver criando uma pasta nova
+    if request.method == 'POST':
+        nome_pasta = request.form['nome_pasta']
+        data_atual = datetime.now().strftime("%d/%m/%Y")
+        cursor.execute("INSERT INTO pastas (nome, data_criacao) VALUES (?, ?)", (nome_pasta, data_atual))
+        conexao.commit()
+        return redirect(url_for('knowledge_hub'))
+
+    # --- LÓGICA DE BUSCA DE PASTAS ---
+    termo = request.args.get('busca_pasta')
+    
+    if termo:
+        # Busca pastas que contenham o termo digitado
+        cursor.execute("SELECT * FROM pastas WHERE nome LIKE ?", (f'%{termo}%',))
+    else:
+        # Se não tiver busca, mostra todas as pastas
+        cursor.execute("SELECT * FROM pastas")
+                
+    pastas = cursor.fetchall()
+    conexao.close()
+    return render_template('knowledge_hub.html', pastas=pastas)
+
+# --- PÁGINA INTERNA DA PASTA (COM MODO KANBAN) ---
+@app.route('/pasta/<int:id_pasta>', methods=['GET', 'POST'])
+def abrir_pasta(id_pasta):
+    # Pega o modo da URL. Se não tiver nada, o padrão é 'lista'
+    modo = request.args.get('modo', 'lista') 
+    
+    conexao = sqlite3.connect('cerandolia.db')
+    cursor = conexao.cursor()
+
+    if request.method == 'POST':
+        nome = request.form['nome_arquivo']
+        tipo = request.form['tipo']
+        data = datetime.now().strftime("%d/%m/%Y")
+        cursor.execute("INSERT INTO arquivos (id_pasta, nome_arquivo, tipo, data_upload, status) VALUES (?, ?, ?, ?, ?)", 
+                       (id_pasta, nome, tipo, data, 'Pendências'))
+        conexao.commit()
+
+    cursor.execute("SELECT nome FROM pastas WHERE id = ?", (id_pasta,))
+    nome_pasta = cursor.fetchone()[0]
+
+    cursor.execute("SELECT * FROM arquivos WHERE id_pasta = ?", (id_pasta,))
+    arquivos = cursor.fetchall()
+    conexao.close()
+    
+    return render_template('pasta.html', nome_pasta=nome_pasta, arquivos=arquivos, id_pasta=id_pasta, modo=modo)
+
+# --- ROTA PARA MOVER O ARQUIVO NO KANBAN ---
+@app.route('/mover-arquivo/<int:id_arquivo>/<int:id_pasta>', methods=['POST'])
+def mover_arquivo(id_arquivo, id_pasta):
+    novo_status = request.form['novo_status']
+    conexao = sqlite3.connect('cerandolia.db')
+    cursor = conexao.cursor()
+    cursor.execute("UPDATE arquivos SET status = ? WHERE id = ?", (novo_status, id_arquivo))
+    conexao.commit()
+    conexao.close()
+    # Volta para a pasta mantendo o modo kanban aberto
+    return redirect(url_for('abrir_pasta', id_pasta=id_pasta, modo='kanban'))
+
+# --- ROTA PARA DELETAR UMA PASTA ---
+@app.route('/deletar-pasta/<int:id>', methods=['POST'])
+def deletar_pasta(id):
+    conexao = sqlite3.connect('cerandolia.db')
+    cursor = conexao.cursor()
+    
+    # 1. Primeiro, deletamos todos os arquivos que pertencem a essa pasta
+    cursor.execute("DELETE FROM arquivos WHERE id_pasta = ?", (id,))
+    
+    # 2. Depois, deletamos a pasta em si
+    cursor.execute("DELETE FROM pastas WHERE id = ?", (id,))
+    
+    conexao.commit()
+    conexao.close()
+    return redirect(url_for('knowledge_hub'))
 
 # --- COLOCA O SERVIDOR NO AR ---
 if __name__ == '__main__':

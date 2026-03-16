@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ nome_pasta }} - Cerandolia</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #eadded; margin: 0; display: flex; min-height: 100vh; }
+        .sidebar { width: 80px; background-color: #3b1154; display: flex; flex-direction: column; align-items: center; padding-top: 20px; position: sticky; top: 0; height: 100vh; }
+        .sidebar a { color: white; text-decoration: none; margin-bottom: 30px; font-size: 24px; opacity: 0.6; }
+        .content { flex: 1; padding: 40px; position: relative; }
+        
+        .header-pasta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn-modo { background: #3b1154; color: white; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-size: 14px; font-weight: bold; }
+
+        /* ESTILO DO KANBAN (QUADRICULADO) */
+        .kanban-container { 
+            display: flex; gap: 15px; overflow-x: auto; padding: 20px; 
+            background-image: radial-gradient(#3b115433 1px, transparent 1px);
+            background-size: 20px 20px; /* Efeito quadriculado que você desenhou */
+            border-radius: 15px; min-height: 500px;
+        }
+        .kanban-coluna { background: rgba(255, 255, 255, 0.5); min-width: 200px; flex: 1; border-radius: 10px; }
+        .coluna-titulo { background: #3b1154; color: white; padding: 10px; text-align: center; border-radius: 10px 10px 0 0; font-size: 14px; text-transform: uppercase; }
+        
+        .card-arquivo { background: white; margin: 10px; padding: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .card-arquivo select { width: 100%; margin-top: 10px; font-size: 10px; }
+
+        /* ESTILO LISTA (NORMAL) */
+        .arquivo-lista { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <a href="/">📋</a>
+        <a href="/knowledge-hub" style="opacity: 1;">📂</a>
+    </div>
+
+    <div class="content">
+        <div class="header-pasta">
+            <div>
+                <a href="/knowledge-hub" style="color: #3b1154; text-decoration: none; font-weight: bold;">⬅ Voltar</a>
+                <h1>📂 {{ nome_pasta }}</h1>
+            </div>
+            {% if modo == 'lista' %}
+                <a href="/pasta/{{ id_pasta }}?modo=kanban" class="btn-modo">Modo: Kanban ▾</a>
+            {% else %}
+                <a href="/pasta/{{ id_pasta }}?modo=lista" class="btn-modo">Modo: Lista ▾</a>
+            {% endif %}
+        </div>
+
+        {% if modo == 'lista' %}
+        <div style="background: white; padding: 15px; border-radius: 15px; margin-bottom: 30px; max-width: 500px;">
+            <form method="POST" style="display: flex; gap: 10px;">
+                <input type="text" name="nome_arquivo" placeholder="Novo arquivo..." required style="flex: 2; padding: 8px;">
+                <select name="tipo" style="flex: 1;"><option>PDF</option><option>Imagem</option><option>Planilha</option></select>
+                <button type="submit" style="background: #3b1154; color: white; border: none; border-radius: 5px; cursor: pointer;">Add</button>
+            </form>
+        </div>
+
+        <div class="lista">
+            {% for arq in arquivos %}
+            <div class="arquivo-lista">
+                <span>📄 <strong>{{ arq[2] }}</strong></span>
+                <span style="background: #d5c0e8; padding: 2px 8px; border-radius: 5px; font-size: 12px;">{{ arq[3] }}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% else %}
+        <div class="kanban-container">
+            {% set colunas = ['Pendências', 'Análise', 'Desenvolvimento', 'Testes', 'Concluído'] %}
+            {% for coluna in colunas %}
+            <div class="kanban-coluna">
+                <div class="coluna-titulo">{{ coluna }}</div>
+                {% for arq in arquivos %}
+                    {% if arq[6] == coluna %}
+                    <div class="card-arquivo">
+                        <strong>{{ arq[2] }}</strong><br>
+                        <small>{{ arq[3] }}</small>
+                        
+                        <form action="/mover-arquivo/{{ arq[0] }}/{{ id_pasta }}" method="POST">
+                            <select name="novo_status" onchange="this.form.submit()">
+                                <option selected disabled>Mover para...</option>
+                                {% for opt in colunas %}
+                                <option value="{{ opt }}">{{ opt }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
